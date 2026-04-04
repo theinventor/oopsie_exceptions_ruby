@@ -12,6 +12,12 @@ Gem::Specification.new do |spec|
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.1"
 
+  spec.metadata = {
+    "source_code_uri" => "https://github.com/theinventor/oopsie_exceptions",
+    "changelog_uri" => "https://github.com/theinventor/oopsie_exceptions/releases",
+    "rubygems_mfa_required" => "true"
+  }
+
   spec.files = Dir["lib/**/*", "LICENSE.txt", "README.md"]
   spec.require_paths = ["lib"]
 

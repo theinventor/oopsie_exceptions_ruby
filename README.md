@@ -80,4 +80,29 @@ config.add_webhook "https://discord.com/api/webhooks/..."
 ```
 
 Each endpoint receives every exception.
-# oopsie_exceptions_ruby
+
+## Payload format
+
+Each webhook receives a JSON payload with:
+
+- **exception** — class, message, backtrace, cause chain
+- **request** — URL, method, IP, params, headers, user agent
+- **context** — user info and custom data you set
+- **server** — hostname, PID, Ruby/Rails versions
+- **app** — name, environment
+- **timestamp** — UTC ISO8601
+
+## Filtering
+
+By default, common noise exceptions are ignored (404s, routing errors, `ActionController::BadRequest`, etc.). Sensitive parameters (`password`, `token`, `secret`, `api_key`) and headers (`Authorization`, `Cookie`) are automatically filtered from payloads.
+
+Customize in your initializer:
+
+```ruby
+config.ignored_exceptions += ["MyApp::IgnorableError"]
+config.filter_parameters += [:credit_card]
+```
+
+## License
+
+MIT — see [LICENSE.txt](LICENSE.txt).
