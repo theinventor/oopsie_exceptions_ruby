@@ -80,3 +80,4 @@ config.add_webhook "https://discord.com/api/webhooks/..."
 ```
 
 Each endpoint receives every exception.
+# oopsie_exceptions_ruby
