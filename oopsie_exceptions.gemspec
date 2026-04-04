@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "lib/oopsie_exceptions/version"
+
 Gem::Specification.new do |spec|
   spec.name          = "oopsie_exceptions"
   spec.version       = OopsieExceptions::VERSION
