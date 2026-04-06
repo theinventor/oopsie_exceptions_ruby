@@ -7,6 +7,7 @@ require_relative "oopsie_exceptions/payload"
 require_relative "oopsie_exceptions/webhook_client"
 require_relative "oopsie_exceptions/middleware"
 require_relative "oopsie_exceptions/error_subscriber"
+require_relative "oopsie_exceptions/active_job_extension"
 require_relative "oopsie_exceptions/railtie" if defined?(Rails::Railtie)
 
 module OopsieExceptions
@@ -58,8 +59,8 @@ module OopsieExceptions
 
     def deliver(payload)
       configuration.webhook_urls.each do |webhook|
-        if configuration.async_delivery && defined?(OopsieExceptions::DeliveryJob)
-          DeliveryJob.perform_later(
+        if configuration.async_delivery && defined?(OopsieExceptions::WebhookJob)
+          WebhookJob.perform_later(
             payload.to_json,
             webhook.url,
             webhook.headers.to_json

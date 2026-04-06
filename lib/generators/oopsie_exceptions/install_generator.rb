@@ -5,32 +5,27 @@ module OopsieExceptions
     class InstallGenerator < Rails::Generators::Base
       source_root File.expand_path("templates", __dir__)
 
-      desc "Creates an OopsieExceptions initializer and delivery job"
+      desc "Creates an OopsieExceptions initializer"
 
       def create_initializer
         template "initializer.rb", "config/initializers/oopsie_exceptions.rb"
       end
 
-      def create_delivery_job
-        template "delivery_job.rb", "app/jobs/oopsie_exceptions/delivery_job.rb"
+      def remove_legacy_delivery_job
+        legacy_path = "app/jobs/oopsie_exceptions/delivery_job.rb"
+        return unless File.exist?(File.join(destination_root, legacy_path))
+
+        say ""
+        say "Found legacy #{legacy_path} from a previous version.", :yellow
+        say "The gem now ships its own webhook job — this file is no longer used."
+        remove_file legacy_path
       end
 
       def show_post_install
         say ""
         say "OopsieExceptions installed!", :green
         say ""
-        say "Next steps:"
-        say "  1. Edit config/initializers/oopsie_exceptions.rb to add your webhook URLs"
-        say "  2. Optionally add user context in ApplicationController:"
-        say ""
-        say "     before_action :set_oopsie_context"
-        say ""
-        say "     def set_oopsie_context"
-        say "       OopsieExceptions.set_context("
-        say "         user: current_user ? { id: current_user.id, email: current_user.email } : nil,"
-        say "         action: \"\#{self.class.name}#\#{action_name}\""
-        say "       )"
-        say "     end"
+        say "Next step: edit config/initializers/oopsie_exceptions.rb and add your webhook URLs."
         say ""
       end
     end
