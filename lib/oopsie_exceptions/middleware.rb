@@ -13,6 +13,11 @@ module OopsieExceptions
         request_context = Context.from_rack_env(env)
         Context.merge(request_context)
 
+        if OopsieExceptions.configuration.context_builder
+          extra = OopsieExceptions.configuration.context_builder.call(env)
+          Context.merge(extra) if extra.is_a?(Hash)
+        end
+
         response = @app.call(env)
 
         if response[0].to_i >= 500

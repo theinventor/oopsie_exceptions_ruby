@@ -7,13 +7,15 @@ module OopsieExceptions
                   :filter_headers, :capture_request_body,
                   :async_delivery, :timeout, :open_timeout,
                   :backtrace_cleaner, :before_notify,
-                  :enabled
+                  :context_builder, :logger, :enabled
 
     def initialize
       @webhook_urls = []
       @app_name = defined?(Rails) ? (Rails.application.class.module_parent_name rescue "App") : "App"
-      @environment = defined?(Rails) ? (Rails.env rescue "development") : "development"
+      @environment = defined?(Rails) ? (Rails.env rescue "development") : (ENV["RACK_ENV"] || "development")
       @ignored_exceptions = default_ignored_exceptions
+      @context_builder = nil
+      @logger = defined?(Rails.logger) && Rails.logger ? Rails.logger : nil
       @filter_parameters = %w[password password_confirmation secret token api_key]
       @filter_headers = %w[Authorization Cookie Set-Cookie]
       @capture_request_body = false

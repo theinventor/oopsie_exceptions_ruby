@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "rack"
+
 module OopsieExceptions
   module Context
     THREAD_KEY = :oopsie_exceptions_context
@@ -22,18 +24,18 @@ module OopsieExceptions
       end
 
       def from_rack_env(env)
-        request = ActionDispatch::Request.new(env)
+        request = Rack::Request.new(env)
         config = OopsieExceptions.configuration
 
         ctx = {
           request: {
-            url: request.original_url,
-            method: request.method,
-            ip: request.remote_ip,
-            user_agent: request.user_agent,
-            referer: request.referer,
-            request_id: request.request_id,
-            params: sanitize_params(request.filtered_parameters),
+            url: request.url,
+            method: request.request_method,
+            ip: request.ip,
+            user_agent: env["HTTP_USER_AGENT"],
+            referer: env["HTTP_REFERER"],
+            request_id: env["action_dispatch.request_id"] || env["HTTP_X_REQUEST_ID"],
+            params: sanitize_params(request.params, config),
             headers: extract_headers(env, config)
           }
         }
@@ -41,7 +43,7 @@ module OopsieExceptions
         if config.capture_request_body && request.content_type&.include?("application/json")
           body = request.body.read
           request.body.rewind
-          ctx[:request][:body] = body.truncate(10_000) if body.present?
+          ctx[:request][:body] = body[0, 10_000] if body && !body.empty?
         end
 
         ctx
@@ -49,8 +51,12 @@ module OopsieExceptions
 
       private
 
-      def sanitize_params(params)
-        params.except("controller", "action").to_h
+      def sanitize_params(params, config)
+        filtered = params.reject { |k, _| k == "controller" || k == "action" }
+        filter_keys = config.filter_parameters
+        filtered.each_with_object({}) do |(k, v), hash|
+          hash[k] = filter_keys.any? { |f| k.to_s.include?(f) } ? "[FILTERED]" : v
+        end
       rescue
         {}
       end

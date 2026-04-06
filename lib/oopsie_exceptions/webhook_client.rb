@@ -27,30 +27,24 @@ module OopsieExceptions
         response = http.request(request)
 
         unless response.is_a?(Net::HTTPSuccess)
-          log_warn("Webhook #{webhook.name} responded #{response.code}: #{response.body.to_s[0, 500]}")
+          log(:warn, "Webhook #{webhook.name} responded #{response.code}: #{response.body.to_s[0, 500]}")
         end
 
         response
       rescue => e
-        log_error("Failed to deliver to #{webhook.name}: #{e.message}")
+        log(:error, "Failed to deliver to #{webhook.name}: #{e.message}")
         nil
       end
 
       private
 
-      def log_warn(message)
-        if defined?(Rails.logger) && Rails.logger
-          Rails.logger.warn("[OopsieExceptions] #{message}")
+      def log(level, message)
+        logger = OopsieExceptions.configuration.logger
+        formatted = "[OopsieExceptions] #{message}"
+        if logger
+          logger.send(level, formatted)
         else
-          warn("[OopsieExceptions] #{message}")
-        end
-      end
-
-      def log_error(message)
-        if defined?(Rails.logger) && Rails.logger
-          Rails.logger.error("[OopsieExceptions] #{message}")
-        else
-          warn("[OopsieExceptions] ERROR: #{message}")
+          warn(formatted)
         end
       end
     end
