@@ -1,7 +1,7 @@
 OopsieExceptions.configure do |config|
   # Add webhook endpoints — exceptions get POSTed here as JSON
   # config.add_webhook "https://your-endpoint.com/webhooks/exceptions",
-  #   headers: { "Authorization" => "Bearer <%= "#{ENV['OOPSIE_WEBHOOK_TOKEN']}" %>" },
+  #   headers: { "Authorization" => "Bearer #{ENV['OOPSIE_WEBHOOK_TOKEN']}" },
   #   name: "primary"
 
   # config.add_webhook "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
@@ -26,5 +26,16 @@ OopsieExceptions.configure do |config|
   # config.before_notify = ->(payload) {
   #   payload[:context][:deploy_sha] = ENV["GIT_SHA"]
   #   payload  # return nil to skip this notification
+  # }
+
+  # Add custom context to every exception from the Rack env.
+  # This runs on every request — use it to attach the current user, feature flags, etc.
+  # config.context_builder = ->(env) {
+  #   warden = env["warden"]
+  #   user = warden&.user
+  #   {
+  #     user: user ? { id: user.id, email: user.email } : nil,
+  #     action: env["action_dispatch.request.path_parameters"]&.slice(:controller, :action)&.values&.join("#")
+  #   }
   # }
 end
