@@ -90,6 +90,8 @@ end
 
 Each captured exception is enriched with request URL/method/IP/params/headers, the current user (via `context_builder` or `set_context`), server hostname/PID/Ruby version, and a UTC timestamp.
 
+Request context capture is best-effort. If Rack rejects a malformed or truncated request body while OopsieExceptions is collecting params, the exception report is still allowed to continue with `request.params` omitted. Payloads include omission metadata such as `params_omitted` / `params_error_class` or `body_omitted` / `body_error_class` when request enrichment fails.
+
 ## Adding context per-request
 
 If you don't want to use `context_builder`, you can set context from a controller:
@@ -188,6 +190,14 @@ config.before_notify = ->(payload) {
 Return `nil` to drop the notification entirely.
 
 ## Upgrading from earlier versions
+
+### Malformed request body handling
+
+Apps that added a local guard around OopsieExceptions request context collection for malformed multipart or truncated request bodies can remove that workaround after upgrading to a gem release that includes best-effort request params/body capture. Until the fixed gem version is deployed in the app, keep the app-local guard in place.
+
+This gem change only prevents OopsieExceptions from turning context enrichment into a new request failure. Production exception groups for the affected app should still be resolved from that app's deploy verification, not from the gem release alone.
+
+### Legacy delivery job cleanup
 
 If you're coming from an older version of the gem that generated `app/jobs/oopsie_exceptions/delivery_job.rb` in your app, **delete that file**. The gem now ships its own `OopsieExceptions::WebhookJob` and the host-app file is obsolete.
 
