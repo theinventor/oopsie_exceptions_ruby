@@ -3,6 +3,7 @@
 require_relative "oopsie_exceptions/version"
 require_relative "oopsie_exceptions/configuration"
 require_relative "oopsie_exceptions/context"
+require_relative "oopsie_exceptions/exception_normalizer"
 require_relative "oopsie_exceptions/payload"
 require_relative "oopsie_exceptions/webhook_client"
 require_relative "oopsie_exceptions/middleware"
@@ -24,12 +25,17 @@ module OopsieExceptions
 
     def report(exception, context: {}, handled: true)
       return unless configuration.enabled
-      return if configuration.ignored?(exception)
-      return if exception.instance_variable_get(REPORTED_MARKER)
+      normalized = ExceptionNormalizer.normalize(exception, context: context)
+      reportable_exception = normalized.exception
 
-      exception.instance_variable_set(REPORTED_MARKER, true)
+      return if configuration.ignored?(reportable_exception)
+      return if reportable_exception.instance_variable_get(REPORTED_MARKER)
 
-      payload = Payload.build(exception, context: context, handled: handled)
+      ([reportable_exception] + normalized.wrappers).each do |reported_exception|
+        reported_exception.instance_variable_set(REPORTED_MARKER, true)
+      end
+
+      payload = Payload.build(reportable_exception, context: normalized.context, handled: handled)
 
       if configuration.before_notify
         payload = configuration.before_notify.call(payload)
